@@ -36,9 +36,19 @@ const AUTO_LOCATED = "alerto-auto-located";
   what stops those two drifting apart.
 */
 const MESSAGE: Record<"denied" | "unsupported" | "unavailable" | "timeout", string> = {
+  /*
+    Two levels, because the browser only reports one.
+
+    iOS returns PERMISSION_DENIED both when a site is refused and when Location
+    Services is switched off for the browser itself, and nothing in the error
+    distinguishes them. This message used to name only the first, so a reader
+    who had already allowed the site was told to go and do the thing they had
+    just done. Naming both is the only honest version.
+  */
   denied:
-    "Location is blocked for this site. Allow it in your browser settings, then tap again — " +
-    "or search for your locality instead.",
+    "Location is blocked. Allowing the site is not always enough — your device may also have " +
+    "location switched off for the browser itself. Check both, then tap again, or search for " +
+    "your locality instead.",
   unsupported: "This browser will not share your location. Search for your locality instead.",
   unavailable:
     "Your device could not work out where it is. Check that location services are switched on, " +
