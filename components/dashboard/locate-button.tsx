@@ -6,7 +6,7 @@ import { CrosshairSimple, Prohibit, Spinner } from "@phosphor-icons/react";
 import { placeHref } from "@/lib/place-url";
 import { describeCoordinates } from "@/lib/reverse-geocode";
 
-type State = "idle" | "locating" | "denied" | "unavailable";
+type State = "idle" | "locating" | "denied" | "unsupported" | "unavailable" | "timeout";
 
 /**
  * Coordinates are rounded before they go anywhere.
@@ -26,12 +26,33 @@ const PRECISION = 2;
   once in the live region a screen reader hears. Keeping them in one place is
   what stops those two drifting apart.
 */
-const MESSAGE: Record<"denied" | "unavailable", string> = {
+const MESSAGE: Record<"denied" | "unsupported" | "unavailable" | "timeout", string> = {
   denied:
     "Location is blocked for this site. Allow it in your browser settings, then tap again — " +
     "or search for your locality instead.",
-  unavailable: "This browser will not share your location. Search for your locality instead.",
+  unsupported: "This browser will not share your location. Search for your locality instead.",
+  unavailable:
+    "Your device could not work out where it is. Check that location services are switched on, " +
+    "then tap again — or search for your locality instead.",
+  timeout:
+    "The location lookup took too long. Tap to try again, or search for your locality instead.",
 };
+
+/*
+  Every way the lookup can end badly, and what each one is called here.
+
+  Only PERMISSION_DENIED used to be reported. The other two fell through to
+  "idle", so the spinner ran, stopped, and the button went back to normal with
+  nothing said — which is what a reader on iOS sees when Location Services is
+  switched off for Safari, because that returns POSITION_UNAVAILABLE rather than
+  a refusal. Silence is the worst of the three answers: it reads as the button
+  being broken rather than as something the reader can go and fix.
+*/
+function stateForError(error: GeolocationPositionError): State {
+  if (error.code === error.PERMISSION_DENIED) return "denied";
+  if (error.code === error.TIMEOUT) return "timeout";
+  return "unavailable";
+}
 
 /**
  * Asks the browser where the reader is, and only when that is reasonable.
@@ -73,7 +94,7 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
   const locate = useCallback(
     (viaPrompt: boolean) => {
       if (!("geolocation" in navigator)) {
-        setState("unavailable");
+        setState("unsupported");
         setNotice(viaPrompt);
         return;
       }
@@ -98,11 +119,14 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
           startNavigation(() => router.push(placeHref(place)));
         },
         (error) => {
-          // A refusal on the silent path is not worth reporting: nothing was
-          // asked for, so there is nothing for the reader to have refused.
-          const blocked = error.code === error.PERMISSION_DENIED && viaPrompt;
-          setState(blocked ? "denied" : "idle");
-          setNotice(blocked);
+          // Nothing was asked for on the silent path, so there is nothing for
+          // the reader to have refused and nothing worth interrupting them with.
+          if (!viaPrompt) {
+            setState("idle");
+            return;
+          }
+          setState(stateForError(error));
+          setNotice(true);
         },
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
       );
@@ -144,15 +168,25 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
   }, [notice]);
 
   const busy = state === "locating" || navigating;
-  const failed = state === "denied" || state === "unavailable";
-  const label =
-    state === "denied"
-      ? "Location blocked"
-      : state === "unavailable"
-        ? "Location unavailable"
-        : busy
-          ? "Finding your location"
-          : "Use my location";
+  const failed = state !== "idle" && state !== "locating";
+
+  /*
+    A timeout is worth retrying and the other three are not, so only those three
+    change the icon. Leaving the crosshair on a timeout keeps the button looking
+    like the thing you tap again, which is exactly what it is.
+  */
+  const stuck = failed && state !== "timeout";
+
+  const label = failed
+    ? {
+        denied: "Location blocked",
+        unsupported: "Location unavailable",
+        unavailable: "Location could not be determined",
+        timeout: "Location lookup timed out",
+      }[state]
+    : busy
+      ? "Finding your location"
+      : "Use my location";
 
   return (
     <>
@@ -178,7 +212,7 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
       >
         {busy ? (
           <Spinner size={15} className="animate-spin" aria-hidden />
-        ) : failed ? (
+        ) : stuck ? (
           /* The state that outlives the notice. A slashed circle says blocked
              without needing the words there is no room for. */
           <Prohibit size={15} aria-hidden />
@@ -186,7 +220,7 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
           <CrosshairSimple size={15} aria-hidden />
         )}
         <span className="hidden sm:inline">
-          {state === "denied" ? "Blocked" : busy ? "Locating" : "My location"}
+          {stuck ? "Blocked" : busy ? "Locating" : "My location"}
         </span>
       </button>
 
