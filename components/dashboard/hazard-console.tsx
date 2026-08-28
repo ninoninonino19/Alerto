@@ -64,7 +64,7 @@ export function HazardConsole({ snapshot }: { snapshot: Snapshot }) {
             {scrubbing ? (
               <>
                 <ArrowUUpLeft size={12} aria-hidden />
-                Back to now
+                Back to live
               </>
             ) : (
               "Live reading"

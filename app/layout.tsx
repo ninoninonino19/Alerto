@@ -21,28 +21,25 @@ const body = Inter({
 });
 
 /*
-  The title is a template because every page is a place.
+  One title for every page.
 
-  It used to be the literal string "Alerto" for all of them, so a link shared to
-  somebody in Lucban arrived saying nothing about Lucban. The per-place half is
-  filled in by generateMetadata in app/page.tsx; this supplies the suffix and the
-  fallback for anything that does not set one.
+  The place is already the largest thing on the screen and it is in the URL, so
+  repeating it in the tab bought nothing and cost the brand its own name at the
+  width a tab actually gets. The description still carries the place, because a
+  search result has no screen to read it off.
 
-  The description says what the thresholds are and, in the same breath, that this
-  is not the official warning. That sentence has to survive being read out of
-  context, because a search result or a shared card is exactly that.
+  That description says what the thresholds are and, in the same breath, that
+  this is not the official warning. The sentence has to survive being read out
+  of context, because a search result or a shared card is exactly that.
 */
 export const metadata: Metadata = {
-  title: {
-    default: "Alerto — heat and rainfall advisories for the Philippines",
-    template: "%s · Alerto",
-  },
+  title: "Alerto",
   description:
     "Live heat index and rainfall for any Philippine locality, classified against PAGASA's " +
     "advisory thresholds. Not a replacement for an official warning.",
   applicationName: "Alerto",
   openGraph: {
-    title: "Alerto — heat and rainfall advisories for the Philippines",
+    title: "Alerto",
     description:
       "Live heat index and rainfall for any Philippine locality, classified against PAGASA's " +
       "advisory thresholds. Not a replacement for an official warning.",
