@@ -1,34 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Alerto">
   <!--
-    The tab mark.
+    The tab mark: a caution triangle, in brand colours rather than hazard ones.
 
-    Drawn rather than set in type, because a favicon cannot load the brand face
-    and a fallback A would be a different letterform on every machine. These are
-    three strokes on the same geometry Manrope 800 uses: a steep apex, a low
-    crossbar, round joins.
+    The shape is the point — a triangle with an exclamation is read as "pay
+    attention" at a glance, and it survives 16px, which is the only size a
+    favicon is really judged at. Solid geometry downscales; letterforms and
+    detailed glyphs do not.
 
-    Geometry over glyph is also what makes it survive 16px. Anything with the
-    detail of a lighthouse — tower, railing, beams — resolves to a smudge at tab
-    size, which is the size that actually matters.
+    The colours are deliberately not the hazard ramp. Those five stops carry
+    PAGASA's advisory levels and appear on nothing that is not reporting a
+    hazard; an amber or red triangle in the tab would claim a warning that is
+    live at every hour of every day, including the ones where the reading is
+    safe. Ink on lime is the brand's own pairing, at 13.05:1, and it holds
+    against both a light and a dark browser chrome.
 
-    Lime ground with ink on top is the brand's primary-action pairing, measured
-    at 13.05:1. It stays legible against both a light and a dark browser chrome,
-    so the mark needs no scheme-aware variant.
+    The triangle is filled and stroked in the same colour so the corners round
+    without a second path. The exclamation is painted in the ground colour on
+    top rather than masked out, which is one fewer thing to go wrong in a
+    renderer that only has sixteen pixels to work with.
   -->
   <rect width="32" height="32" rx="8" fill="#9fe870" />
   <path
-    d="M8.5 24 L16 8.5 L23.5 24"
-    fill="none"
+    d="M16 8.5 L26 25 L6 25 Z"
+    fill="#0e0f0c"
     stroke="#0e0f0c"
-    stroke-width="4"
-    stroke-linecap="round"
+    stroke-width="3"
     stroke-linejoin="round"
   />
   <path
-    d="M12 18.5 H20"
-    fill="none"
-    stroke="#0e0f0c"
-    stroke-width="4"
+    d="M16 13.4 V17.2"
+    stroke="#9fe870"
+    stroke-width="2.6"
     stroke-linecap="round"
   />
+  <circle cx="16" cy="22.1" r="1.9" fill="#9fe870" />
 </svg>
