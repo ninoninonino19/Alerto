@@ -85,11 +85,6 @@ export function LocationSwitcher({ current }: { current: Place }) {
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
-  function choose(match: PlaceMatch) {
-    setOpen(false);
-    router.push(placeHref(match.place));
-  }
-
   /*
     The query clears when the new place lands, not when the result is clicked.
 
@@ -106,6 +101,20 @@ export function LocationSwitcher({ current }: { current: Place }) {
   if (settledPlace !== placeKey) {
     setSettledPlace(placeKey);
     setQuery("");
+  }
+
+  function choose(match: PlaceMatch) {
+    setOpen(false);
+
+    /*
+      Picking the place already on screen is the one case the reset above cannot
+      catch: the URL does not change, so `current` never changes, and the query
+      would sit in the field for the rest of the visit. Clearing here is safe
+      precisely because nothing is navigating — there is no exit to blank.
+    */
+    if (`${match.place.latitude},${match.place.longitude}` === placeKey) setQuery("");
+
+    router.push(placeHref(match.place));
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
