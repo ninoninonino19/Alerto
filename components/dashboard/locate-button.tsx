@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CrosshairSimple, Spinner } from "@phosphor-icons/react";
+import { CrosshairSimple, Prohibit, Spinner } from "@phosphor-icons/react";
 import { placeHref } from "@/lib/place-url";
 import { describeCoordinates } from "@/lib/reverse-geocode";
 
@@ -19,6 +19,20 @@ type State = "idle" | "locating" | "denied" | "unavailable";
  */
 const PRECISION = 2;
 
+/*
+  What a failure says, in the two ways it has to be said.
+
+  Both strings are used twice: once in the notice a sighted reader sees, and
+  once in the live region a screen reader hears. Keeping them in one place is
+  what stops those two drifting apart.
+*/
+const MESSAGE: Record<"denied" | "unavailable", string> = {
+  denied:
+    "Location is blocked for this site. Allow it in your browser settings, then tap again — " +
+    "or search for your locality instead.",
+  unavailable: "This browser will not share your location. Search for your locality instead.",
+};
+
 /**
  * Asks the browser where the reader is, and only when that is reasonable.
  *
@@ -34,6 +48,17 @@ const PRECISION = 2;
 export function LocateButton({ isDefault }: { isDefault: boolean }) {
   const router = useRouter();
   const [state, setState] = useState<State>("idle");
+
+  /*
+   * Whether the explanation is on screen.
+   *
+   * Separate from `state` because the two have different lifetimes: being
+   * blocked lasts until the reader changes a browser setting, while the notice
+   * saying so is dismissed as soon as it has been read. The icon carries the
+   * lasting half.
+   */
+  const [notice, setNotice] = useState(false);
+
   /*
    * The navigation owns the tail of the spinner.
    *
@@ -49,6 +74,7 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
     (viaPrompt: boolean) => {
       if (!("geolocation" in navigator)) {
         setState("unavailable");
+        setNotice(viaPrompt);
         return;
       }
       setState("locating");
@@ -74,7 +100,9 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
         (error) => {
           // A refusal on the silent path is not worth reporting: nothing was
           // asked for, so there is nothing for the reader to have refused.
-          setState(error.code === error.PERMISSION_DENIED && viaPrompt ? "denied" : "idle");
+          const blocked = error.code === error.PERMISSION_DENIED && viaPrompt;
+          setState(blocked ? "denied" : "idle");
+          setNotice(blocked);
         },
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
       );
@@ -98,7 +126,25 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
       });
   }, [isDefault, locate]);
 
+  /*
+   * The notice closes on the next touch anywhere.
+   *
+   * pointerdown rather than click, so it fires before the button's own handler:
+   * tapping the button dismisses this and then reopens it as part of retrying,
+   * which is the behaviour that reads as "try again" rather than "nothing
+   * happened".
+   */
+  useEffect(() => {
+    if (!notice) return;
+    function dismiss() {
+      setNotice(false);
+    }
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [notice]);
+
   const busy = state === "locating" || navigating;
+  const failed = state === "denied" || state === "unavailable";
   const label =
     state === "denied"
       ? "Location blocked"
@@ -109,26 +155,64 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
           : "Use my location";
 
   return (
-    <button
-      type="button"
-      onClick={() => locate(true)}
-      disabled={busy || state === "unavailable"}
-      title={
-        state === "denied"
-          ? "Location is blocked for this site. Allow it in your browser settings, then try again."
-          : label
-      }
-      aria-label={label}
-      className="touch-target pressable hoverable flex h-10 shrink-0 items-center gap-1.5 rounded-control bg-surface px-2.5 text-sm font-semibold text-ink disabled:text-faint sm:px-3"
-    >
-      {busy ? (
-        <Spinner size={15} className="animate-spin" aria-hidden />
-      ) : (
-        <CrosshairSimple size={15} aria-hidden />
-      )}
-      <span className="hidden sm:inline">
-        {state === "denied" ? "Blocked" : busy ? "Locating" : "My location"}
+    <>
+      <button
+        type="button"
+        onClick={() => locate(true)}
+        /*
+          Disabled only while a lookup is in flight. It used to be disabled for
+          "unavailable" too, which left a dead control on a phone with nothing
+          to explain it: the label that would have said so is hidden below the
+          sm breakpoint, and the title that would have said so needs a pointer
+          to hover.
+        */
+        disabled={busy}
+        aria-label={label}
+        /*
+          justify-center matters here and nowhere else in this row. On a coarse
+          pointer .touch-target sets a 44px floor, the content is 35px, and
+          without this the spare nine pixels all land on one side and the icon
+          sits visibly off centre.
+        */
+        className="touch-target pressable hoverable flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control bg-surface px-2.5 text-sm font-semibold text-ink disabled:text-faint sm:px-3"
+      >
+        {busy ? (
+          <Spinner size={15} className="animate-spin" aria-hidden />
+        ) : failed ? (
+          /* The state that outlives the notice. A slashed circle says blocked
+             without needing the words there is no room for. */
+          <Prohibit size={15} aria-hidden />
+        ) : (
+          <CrosshairSimple size={15} aria-hidden />
+        )}
+        <span className="hidden sm:inline">
+          {state === "denied" ? "Blocked" : busy ? "Locating" : "My location"}
+        </span>
+      </button>
+
+      {/*
+        Pinned under the header rather than anchored to the button.
+
+        At 375px the header has no spare width at all, and a popover hung off a
+        control that sits 86px from the left edge would run off the screen. This
+        is positioned against the viewport instead, so it fits at every width and
+        needs no arithmetic.
+      */}
+      <div
+        data-open={notice && failed}
+        className="pop fixed inset-x-4 top-[4.5rem] z-30 mx-auto max-w-sm rounded-card bg-raised p-4 shadow-xl shadow-black/10 ring-1 ring-line"
+      >
+        <p className="text-sm leading-5 text-muted">{failed ? MESSAGE[state] : ""}</p>
+      </div>
+
+      {/*
+        The same words, for a reader who cannot see the notice. Always mounted
+        and outside the box above, because a live region inside something that
+        is display: none announces nothing when it appears.
+      */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {failed ? MESSAGE[state] : ""}
       </span>
-    </button>
+    </>
   );
 }
