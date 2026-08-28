@@ -20,6 +20,15 @@ type State = "idle" | "locating" | "denied" | "unsupported" | "unavailable" | "t
 const PRECISION = 2;
 
 /*
+  Marks that this tab has already been located without being asked.
+
+  Session rather than local storage: a new tab is a new arrival and should get
+  the silent lookup again, while a second visit to the default place inside one
+  session should not.
+*/
+const AUTO_LOCATED = "alerto-auto-located";
+
+/*
   What a failure says, in the two ways it has to be said.
 
   Both strings are used twice: once in the notice a sighted reader sees, and
@@ -138,12 +147,44 @@ export function LocateButton({ isDefault }: { isDefault: boolean }) {
     if (attempted.current || !isDefault) return;
     attempted.current = true;
 
+    /*
+      Once per tab, not once per page load.
+
+      The ref above only guards one component lifetime, so every fresh load of
+      "/" used to re-run this — and once permission had been granted, that meant
+      the wordmark could not take anyone home. Clicking Alerto landed on the
+      default place and was immediately pushed back off it, with the dashboard
+      swapping under a document title that had not caught up.
+
+      A session key is the right lifetime for it. Arriving fresh still lands you
+      on your own locality with nothing asked and nothing tapped, which is the
+      whole point of the silent path; going home during that visit now means
+      going home.
+    */
+    let alreadyLocated = false;
+    try {
+      alreadyLocated = sessionStorage.getItem(AUTO_LOCATED) === "1";
+    } catch {
+      // Private mode can refuse storage. Falling back to locating once per load
+      // is the old behaviour, which is worse but not broken.
+    }
+    if (alreadyLocated) return;
+
     // Permissions is the whole point of the silent path: it distinguishes
     // "already allowed" from "never asked", which getCurrentPosition cannot.
     navigator.permissions
       ?.query({ name: "geolocation" })
       .then((status) => {
-        if (status.state === "granted") locate(false);
+        if (status.state !== "granted") return;
+        /*
+          Marked before the lookup rather than after. A silent attempt that
+          fails should not be retried on the next navigation either — nobody
+          asked for it, so nobody is waiting to see it succeed.
+        */
+        try {
+          sessionStorage.setItem(AUTO_LOCATED, "1");
+        } catch {}
+        locate(false);
       })
       .catch(() => {
         // Safari has been late to this. No permission info means no silent path.
