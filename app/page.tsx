@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CloudSlash } from "@phosphor-icons/react/dist/ssr";
 import { HEAT_SEVERITY } from "@/lib/heat-index";
@@ -37,6 +38,52 @@ function resolvePlace(params: SearchParams): Place {
     admin: (readOne(params, "admin") ?? "Philippines").slice(0, 60),
     latitude: lat,
     longitude: lon,
+  };
+}
+
+/**
+ * The place is in the title, because the place is the whole point of the URL.
+ *
+ * These links get shared — pasted into a group chat when the weather turns —
+ * and the tab, the search result and the link preview all read from here. A
+ * card that says only "Alerto" makes the reader open it to find out whether it
+ * is even about their town.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const place = resolvePlace(await searchParams);
+  const where = `${place.name}, ${place.admin}`;
+  const summary =
+    `Heat index and rainfall for ${where}, classified against PAGASA's advisory ` +
+    "thresholds. Not a replacement for an official warning.";
+
+  return {
+    /*
+      The suffix is written out rather than left to the layout's title template.
+      A template applies to child route segments only, never to the segment that
+      defines it, and app/layout.tsx and app/page.tsx are the same segment — so
+      the template silently does nothing here. It is still correct for any route
+      added later, which is why it stays.
+    */
+    title: `${where} · Alerto`,
+    description: summary,
+
+    /*
+      type, locale and siteName are repeated from the layout because a child's
+      openGraph object replaces the parent's rather than merging into it.
+      Omitting them here dropped og:locale and og:type from every place page,
+      which are the ones a link preview reads.
+    */
+    openGraph: {
+      title: `${where} · Alerto`,
+      description: summary,
+      type: "website",
+      locale: "en_PH",
+      siteName: "Alerto",
+    },
   };
 }
 
