@@ -14,7 +14,7 @@ import nextTypeScript from "eslint-config-next/typescript";
   rather than routed through FlatCompat, which cannot serialise them.
 */
 const config = [
-  { ignores: [".next/**", "node_modules/**", "next-env.d.ts", "*.cjs", "rm.tmp"] },
+  { ignores: [".next/**", "node_modules/**", "next-env.d.ts", "*.cjs"] },
 
   ...nextCoreWebVitals,
   ...nextTypeScript,

@@ -1,3 +1,17 @@
+# Overview map — unbuilt specification
+
+**Status: not implemented.** Nothing described below exists in the codebase.
+There is no `lib/ph-outline.ts`, no map component, and no reference to any of it
+outside this file.
+
+It was written as a README section, in the present tense, for a feature that was
+either cut or never started. It is kept because the reasoning is worth having if
+the map is ever built: the one-request API budget and the decision to pin every
+locality at Extreme Caution and above are the parts that would otherwise have to
+be rediscovered.
+
+---
+
 ## The map, and the API budget
 
 The overview panel tracks twenty localities across all three island groups, and
@@ -34,4 +48,3 @@ server, no map SDK, no API key, nothing fetched at runtime. The projection and
 its inverse live in that same file, so a tap turns back into a real coordinate
 with exactly the maths that drew the coast, and `npm test` checks that the round
 trip is lossless.
-
