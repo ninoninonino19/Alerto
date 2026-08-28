@@ -1,5 +1,3 @@
-import { Lighthouse } from "@phosphor-icons/react/dist/ssr";
-
 /**
  * The band that closes the page.
  *
@@ -13,19 +11,12 @@ import { Lighthouse } from "@phosphor-icons/react/dist/ssr";
  * plainly that it is not the official warning — so it now leads, and it says
  * where the official warning actually is. Telling somebody this is unofficial
  * without telling them where to go is only half an answer.
- *
- * A lighthouse rather than a bell. A bell promises notifications this
- * application does not send; a lighthouse is a fixed warning you go and look
- * at, which is what this is.
  */
 export function SiteFooter() {
   return (
     <footer className="mt-10 border-t border-footer-edge bg-footer text-footer-text">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <p className="display flex items-center gap-2 text-base text-footer-accent">
-          <Lighthouse size={18} weight="fill" aria-hidden />
-          Alerto
-        </p>
+        <p className="display text-base text-footer-accent">Alerto</p>
 
         <p className="mt-4 max-w-[64ch] text-sm leading-5">
           <strong className="font-semibold text-footer-text">
