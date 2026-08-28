@@ -1,0 +1,9 @@
+.next
+node_modules
+package-lock.json
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# Spent one-off patch scripts and a stray spec file, all slated for removal.
+*.cjs
+rm.tmp

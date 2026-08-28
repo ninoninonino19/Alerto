@@ -1,0 +1,786 @@
+@import "tailwindcss";
+
+/*
+  Alerto on the Wise design language.
+
+  Two colour systems live here and they are kept strictly apart.
+
+  1. Chrome. Sage canvas, white cards, near-black olive ink, and one lime brand
+     accent. Surface contrast carries elevation, so cards mostly have no border
+     and no shadow: white on sage is the elevation.
+
+  2. Hazard ramp. Five stops carrying PAGASA's advisory levels, derived from
+     Wise's semantic palette rather than invented. These are data, not brand,
+     and appear on nothing that is not reporting a hazard.
+
+  The lime never enters the hazard ramp. Wise reserves it for primary actions,
+  and that rule happens to protect something safety critical here: a button can
+  never be mistaken for an all-clear.
+
+  Radius follows the brand: 24px cards and buttons, 12px inputs, 8px chips,
+  pill for status badges.
+*/
+
+/*
+  One palette, both schemes.
+
+  Every colour that changes between light and dark is declared once, as a pair,
+  through light-dark(). The two values sit on the same line because that is how
+  a palette is actually reasoned about — you want to see what a token becomes,
+  not scroll between two blocks fifty lines apart and trust that they agree.
+
+  They stopped agreeing being the point: the dark palette used to exist twice,
+  once under prefers-color-scheme and once under [data-theme="dark"], thirty
+  nine declarations duplicated verbatim. Both were correct, and either could
+  have been edited alone. The two paths are exercised by different readers — one
+  who has never touched the toggle, one who has — so a half-applied change would
+  have shipped looking fine to whoever made it.
+
+  What selects a branch is now colour-scheme alone, which is set in exactly one
+  place below. Dark mode is still the brand's own polarity flip, card-feature-
+  dark: ink surface with the lime carrying text. A hazard dashboard gets opened
+  at 2am during a storm, so it is a first-class mode rather than an afterthought.
+*/
+:root {
+  /* Both branches are live; the overrides below pin one. */
+  color-scheme: light dark;
+
+  /* Surface. Sage page, white cards. */
+  --surface: light-dark(#e8ebe6, #0e0f0c);
+  --surface-raised: light-dark(#ffffff, #1a1d18);
+  --surface-sunken: light-dark(#dbe0d7, #070805);
+  --line: light-dark(#d2d8cd, #2b2f28);
+  --line-strong: light-dark(#b3bbad, #3d423a);
+  --guide: light-dark(#7d827b, #6d736a);
+
+  /* Text. Ink carries an olive cast, which is what keeps it off pure black. */
+  --text: light-dark(#0e0f0c, #e8ebe6);
+  --text-muted: light-dark(#454745, #b0b5ac);
+  --text-faint: light-dark(#5f635d, #8f948b);
+
+  /*
+    Lime is a fill, never a text colour in light mode: #9fe870 on white is
+    about 1.6:1. Green-as-text is carried by ink-deep instead.
+  */
+  --accent: #9fe870;
+  --accent-hover: #cdffad;
+  --accent-ink: #0e0f0c;
+  --accent-text: light-dark(#163300, #9fe870);
+  --accent-soft: light-dark(#e2f6d5, #17240f);
+
+  /* Safe. Wise's badge-positive recipe. */
+  --hz-neutral: light-dark(#26993e, #6ed07f);
+  --hz-neutral-surface: light-dark(#e2f6d5, #10240f);
+  --hz-neutral-text: light-dark(#054d28, #b6ebbd);
+  --hz-neutral-edge: light-dark(#b3e394, #2f5c35);
+
+  /* Caution. Wise warning family. */
+  --hz-warn: light-dark(#a37a00, #ffd11a);
+  --hz-warn-surface: light-dark(#fff5d4, #2b2408);
+  --hz-warn-text: light-dark(#4a3b1c, #f7dd93);
+  --hz-warn-edge: light-dark(#ffd11a, #6d5c17);
+
+  /* Extreme Caution. Wise warning-deep, the burnt orange. */
+  --hz-high: light-dark(#b86700, #ff9a4d);
+  --hz-high-surface: light-dark(#ffe7d2, #2e1a08);
+  --hz-high-text: light-dark(#5e3208, #fbc79c);
+  --hz-high-edge: light-dark(#ffc091, #7d4715);
+
+  /* Danger. Wise negative family. */
+  --hz-severe: light-dark(#c22a30, #f2585e);
+  --hz-severe-surface: light-dark(#fce8e8, #2f0e10);
+  --hz-severe-text: light-dark(#a7000d, #ffabaf);
+  --hz-severe-edge: light-dark(#eda2a5, #8b2429);
+
+  /*
+    Extreme Danger flips polarity: a dark maroon fill with light text, which is
+    Wise's badge-negative. It is the only band that breaks the pale-tint
+    pattern, and breaking the pattern is the point.
+  */
+  --hz-extreme: light-dark(#7a0009, #ff7c88);
+  --hz-extreme-surface: light-dark(#320707, #4a0308);
+  --hz-extreme-text: light-dark(#ffffff, #ffd2d7);
+  --hz-extreme-edge: light-dark(#a72027, #a7000d);
+
+  /*
+    The footer is a band, not a card, so it gets its own surface.
+
+    In light mode that is the brand's ink block against the sage page. In dark
+    mode the page is already ink, so an ink footer would be invisible: it lifts
+    to a deep olive instead, tinted toward the lime so it still reads as the
+    same band rather than as another card.
+  */
+  --footer-surface: light-dark(#0e0f0c, #2f4423);
+  --footer-text: #e8ebe6;
+  --footer-muted: light-dark(#b8bdb4, #b9c1b0);
+  --footer-accent: #9fe870;
+  --footer-edge: light-dark(#0e0f0c, #4a6438);
+
+  --r-panel: 24px;
+  --r-card: 16px;
+  --r-control: 12px;
+  --r-chip: 8px;
+}
+
+/*
+  The reader's override, and the only thing that decides which half of every
+  pair above applies. Nothing else needs restating.
+*/
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-raised: var(--surface-raised);
+  --color-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-guide: var(--guide);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-footer: var(--footer-surface);
+  --color-footer-text: var(--footer-text);
+  --color-footer-muted: var(--footer-muted);
+  --color-footer-accent: var(--footer-accent);
+  --color-footer-edge: var(--footer-edge);
+
+  --radius-panel: var(--r-panel);
+  --radius-card: var(--r-card);
+  --radius-control: var(--r-control);
+  --radius-chip: var(--r-chip);
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display-face);
+}
+
+/*
+  Reserve the scrollbar track at all times.
+
+  Without this, any change in page height that crosses the viewport boundary
+  makes the scrollbar appear or vanish, and the whole layout jumps sideways by
+  its width. During a scrub that reads as the window resizing itself.
+*/
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-feature-settings: "calt";
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+  The display face is the brand's voice and is used only for the hazard verdict
+  and the wordmark. Weight 800 with leading tighter than the type size is the
+  signature; anything lighter loses the whole character.
+*/
+.display {
+  font-family: var(--font-display-face), var(--font-body), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.88;
+}
+
+/*
+  Readouts change on every pointer move during a scrub. Tabular figures keep
+  them from reflowing, which is why the body face is used with its tabular
+  feature rather than adding a second family for numerals.
+*/
+.tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/*
+  Two label sizes below the 12px floor, and the reason they are allowed to be.
+
+  Everything meant to be read as prose in this interface is 14px or larger.
+  These two are for text that labels data rather than being read: an axis tick,
+  the hour riding the playhead, the band names down the rail, the level on a
+  reading card. Each is glanced at beside the thing it names, never scanned in
+  sequence, and each sits in a column whose width is set by the chart rather
+  than by the type.
+
+  Both step up one at 640px, because the chart does. The track heights in this
+  file grow at that same breakpoint, so the furniture grows with them rather
+  than staying fixed while the graph around it doubles.
+
+  Only font-size is set here. Leading belongs to each use: a pill riding a 2px
+  line needs different leading from a tick sitting under a bar, and folding one
+  value in would have changed three of them.
+
+  Finest is reserved for inside the level rail, the one column narrow enough at
+  375px to force a second step down.
+*/
+.type-fine {
+  font-size: 11px;
+}
+
+.type-finest {
+  font-size: 10px;
+}
+
+@media (min-width: 640px) {
+  .type-fine {
+    font-size: 12px;
+  }
+
+  .type-finest {
+    font-size: 11px;
+  }
+}
+
+/*
+  The focus ring.
+
+  Text inputs are deliberately not in this list. The rule has always been
+  :focus-visible, which for a button or a link means keyboard only, but browsers
+  treat a text field as focus-visible even when it is clicked, on the reasoning
+  that a click there means you are about to type. So the search box was ringing
+  on every click while behaving exactly as specified.
+
+  It keeps its own indication instead: a blinking caret, which browsers supply,
+  and an inset ring on its frame, which is quiet enough not to read as a halo.
+  See the search field in location-switcher.
+
+  Everything else keeps the ring. It is the only thing telling somebody
+  navigating by keyboard which control they are on, and without it the theme
+  toggle, the search results and the chart scrubber cannot be used at all.
+*/
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 0;
+  border-radius: 4px;
+}
+
+/*
+  The search field's own focus mark.
+
+  Written here rather than with utilities because the two Tailwind classes this
+  replaced, ring-inset and outline-none, were both renamed in v4 and generated
+  nothing at all. A class that silently produces no CSS is worse than a wrong
+  one, since the markup still reads as though the style is applied.
+
+  An inset ring rather than an outline, so the frame thickens in place and
+  nothing in the header shifts when the field takes focus.
+
+  The ring is drawn by a pseudo-element and faded in, rather than set as a
+  box-shadow on the field itself. Two reasons. Opacity is the only thing that
+  then animates, which keeps the transition off paint. And the ring is always
+  present, so it fades out on blur as well as in on focus — a box-shadow going
+  straight to none would have made the frame snap back the moment focus left.
+*/
+.field {
+  position: relative;
+}
+
+.field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-press) var(--ease-out);
+}
+
+.field:focus-within::after {
+  opacity: 1;
+}
+
+/*
+  Suppress the input's own focus outline.
+
+  This is the other half of the note above about outline-none disappearing in
+  Tailwind v4. The frame ring replaced the outline in intent but never actually
+  removed it, so a focused field drew two marks: the ring around the whole
+  control, and the browser's outline around the input alone. The second one
+  started after the magnifying glass and read as a box nested inside the field.
+
+  Safe to drop only because the ring above exists and, unlike :focus-visible,
+  fires for pointer focus as well as keyboard. Removing this outline without
+  that ring in place would leave a keyboard user with no indication at all.
+*/
+.field input:focus {
+  outline: none;
+}
+
+/*
+  The magnifying glass carries the same state as the frame. It is the one mark
+  in the collapsed field that reads as belonging to the search rather than to
+  the header, so lifting it out of the faint grey is what says the field is
+  listening. Colour only — the icon does not move.
+*/
+.field-icon {
+  transition: color var(--dur-press) ease;
+}
+
+.field:focus-within .field-icon {
+  color: var(--text);
+}
+
+/*
+  The extreme band carries a hatch as well as a colour. Severe red and extreme
+  maroon are close enough in hue that protanopia flattens them, and this is the
+  one distinction where being wrong is dangerous.
+*/
+.hatch-extreme {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.22) 0 2px,
+    transparent 2px 6px
+  );
+}
+
+/*
+  One easing vocabulary for the whole interface. The built-in CSS curves are
+  too weak to read as intentional; these are the strong variants.
+*/
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --dur-press: 160ms;
+  --dur-pop: 180ms;
+  --dur-move: 220ms;
+  --dur-tone: 260ms;
+}
+
+/*
+  One transition list shared by both classes. The transition property is a
+  shorthand, so declaring it separately on each would mean the second rule
+  silently drops the first one's property on any element carrying both.
+*/
+.pressable,
+.hoverable {
+  transition:
+    transform var(--dur-press) var(--ease-out),
+    opacity var(--dur-press) ease,
+    background-color var(--dur-press) ease,
+    color var(--dur-press) ease;
+}
+
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* Touch devices fire hover on tap and then keep it, so the state is gated. */
+@media (hover: hover) and (pointer: fine) {
+  .hoverable:hover {
+    opacity: 0.72;
+  }
+}
+
+/*
+  Tone changes are the one thing worth animating during a scrub. The numbers
+  change on every pointer move and must snap, but crossing from Caution into
+  Danger is a rare, meaningful event and reads better as a transition than as
+  a jump cut.
+*/
+.tone-shift {
+  transition:
+    background-color var(--dur-tone) ease,
+    border-color var(--dur-tone) ease,
+    color var(--dur-tone) ease;
+}
+
+/*
+  Entry cascade. Resolves the page in reading order once, on load, then never
+  again. Delays stay short so the page does not feel slow to assemble.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  .enter {
+    animation: enter-rise 420ms var(--ease-out) both;
+    animation-delay: calc(var(--step, 0) * 55ms);
+  }
+}
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+  The scrub playhead and the ladder marker both move along one axis in response
+  to a pointer. Transitions rather than keyframes, because a scrub retargets
+  constantly and keyframes would restart from zero on every hour crossed.
+*/
+.playhead,
+.ladder-marker {
+  transition: transform var(--dur-move) var(--ease-out);
+}
+
+/*
+  The layer hint, only while these two can actually move.
+
+  It used to be unconditional, so the playhead held a compositor layer for the
+  whole visit while sitting at opacity 0. The three selectors are the three ways
+  a scrub starts: pointer over the control, keyboard focus inside it, or a drag
+  already under way, which is the only one touch reaches.
+*/
+.scrub-scope:focus-within .playhead,
+.scrub-scope:focus-within .ladder-marker,
+.scrub-scope[data-scrubbing="true"] .playhead,
+.scrub-scope[data-scrubbing="true"] .ladder-marker {
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .scrub-scope:hover .playhead,
+  .scrub-scope:hover .ladder-marker {
+    will-change: transform;
+  }
+}
+
+/*
+  Keyboard scrubbing is repeated rapidly and must not animate. Same control,
+  different motion policy depending on how it was driven.
+*/
+.playhead[data-instant="true"],
+.ladder-marker[data-instant="true"] {
+  transition-duration: 0ms;
+}
+
+/*
+  Chart track heights.
+
+  Kept in CSS rather than in the components so the chart can grow with the
+  viewport. Everything that draws into these tracks works in fractions, so
+  changing these values is the only edit needed to resize the graph.
+*/
+:root {
+  --heat-track: 168px;
+  --rain-track: 108px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --heat-track: 208px;
+    --rain-track: 132px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --heat-track: 244px;
+    --rain-track: 156px;
+  }
+}
+
+/*
+  Hours that are not being read step back while a scrub is live.
+
+  The two opacities used to be Tailwind classes chosen per bar, which meant the
+  scrub position was baked into forty-eight class strings and all forty-eight
+  were rebuilt on every pointer move. Here it is one attribute on the container
+  and one on the bar the pointer is over, so the browser restyles rather than
+  React re-rendering.
+*/
+.bar {
+  opacity: 0.95;
+  transition:
+    opacity 140ms ease,
+    background-color var(--dur-tone) ease;
+}
+
+.scrub-scope[data-scrubbing="true"] .bar {
+  opacity: 0.25;
+}
+
+.scrub-scope[data-scrubbing="true"] .bar[data-active="true"] {
+  opacity: 0.95;
+}
+
+/*
+  The hour ticks step back with the bars, from the same attribute and on the
+  same curve. This was the one transition in the interface still running on
+  Tailwind's default 150ms ease rather than the vocabulary above, and the one
+  place left where the scrub position was threaded through a className.
+*/
+.hour-ticks {
+  transition: opacity var(--dur-press) ease;
+}
+
+.scrub-scope[data-scrubbing="true"] .hour-ticks {
+  opacity: 0.3;
+}
+
+/*
+  Results list scales in from the input above it rather than from its own
+  centre, and starts at 0.97 rather than 0 because nothing in the world appears
+  from nothing.
+*/
+.pop {
+  transform-origin: top center;
+  transition:
+    opacity var(--dur-pop) var(--ease-out),
+    transform var(--dur-pop) var(--ease-out),
+    display var(--dur-pop) allow-discrete;
+}
+
+/*
+  The list leaves the way it arrived.
+
+  It used to be unmounted on close, so the entry above was only ever half an
+  animation: it scaled in and then hard cut out. It now stays in the tree and is
+  closed through display, which is what allow-discrete exists for. Browsers
+  without allow-discrete fall back to the hard cut, which is the behaviour this
+  replaced rather than a broken one.
+
+  display: none also takes the closed list out of the accessibility tree, so an
+  empty listbox is never announced.
+*/
+.pop[data-open="false"] {
+  display: none;
+  opacity: 0;
+  transform: scale(0.97) translateY(-4px);
+}
+
+@starting-style {
+  .pop[data-open="true"] {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+  }
+}
+
+/*
+  A refetch dims the list it is about to replace instead of wiping it back to
+  skeleton bars. Typing past the debounce otherwise collapsed a good list to
+  three grey rows and then re-expanded it, and the popover changed height twice
+  per keystroke. Opacity only: the rows keep their place.
+
+  The dim lands on the rows rather than on a wrapper around them. A listbox may
+  only contain options and groups, so there is no wrapper left to carry it, and
+  putting it on the list itself would have two rules driving one opacity: this
+  one, and the open/close transition above.
+
+  The rows inherit their transition from .pressable; the group label needs its
+  own, since it is not interactive.
+*/
+.pop[data-refreshing="true"] .result-row,
+.pop[data-refreshing="true"] .result-group-label {
+  opacity: 0.55;
+}
+
+.result-group-label {
+  transition: opacity var(--dur-press) ease;
+}
+
+/*
+  Theme toggle faces.
+
+  Both the sun and the moon ship in the markup and CSS displays one, switching
+  on the same two signals the palette itself does. Two things fall out of that.
+
+  The control is right on the first painted frame. React state could only ever
+  be right one frame late, because the server has no scheme to render, so the
+  button shipped as the moon for everybody and corrected itself after hydration.
+
+  And an OS that turns dark at sunset restyles it with no listener and no
+  re-render: the media query is the subscription.
+
+  The labels are display-toggled alongside the icons rather than left to sr-only
+  alone. display: none removes the wrong one from the accessibility tree as well
+  as from the page, so the name and the icon cannot disagree.
+*/
+.when-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .when-light {
+    display: none;
+  }
+
+  :root:not([data-theme="light"]) .when-dark {
+    display: block;
+  }
+}
+
+:root[data-theme="dark"] .when-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .when-dark {
+  display: block;
+}
+
+/*
+  The clear button holds its box whether or not there is a query, so the field
+  does not reflow the moment the first character lands. It fades and scales
+  rather than appearing, and is disabled when there is nothing to clear.
+*/
+.clear-affordance {
+  position: relative;
+  transition:
+    opacity var(--dur-press) var(--ease-out),
+    transform var(--dur-press) var(--ease-out);
+}
+
+/*
+  Touch targets.
+
+  Gated on the pointer rather than the viewport, because the two are not the
+  same question. A laptop with a touchscreen needs the bigger target and a phone
+  in a desktop-width browser does not, and only pointer: coarse knows which is
+  which.
+
+  The header controls carry their visual size in Tailwind and take their floor
+  here, so nothing changes for a mouse.
+*/
+@media (pointer: coarse) {
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /*
+    The clear button is the exception, because it cannot grow. It lives inside
+    the search field, which is the narrowest thing in the header at 375px and
+    the first thing to lose width when anything beside it gets bigger.
+
+    So the hit area grows instead of the button: into the field's own padding
+    above, below and to the right, which is dead space belonging to no other
+    control. It deliberately stops short on the left, where it would otherwise
+    sit over the last characters of what the reader is typing and turn a mis-tap
+    into a cleared query.
+  */
+  .clear-affordance::after {
+    content: "";
+    position: absolute;
+    inset: -7px -12px -7px -2px;
+  }
+}
+
+.clear-affordance[data-visible="false"] {
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+/*
+  Arrow keys move the highlight faster than a 160ms colour fade can follow, and
+  the trail of half-lit rows makes it ambiguous which one Enter would pick.
+  Pointer-driven highlight keeps the fade; keyboard-driven highlight snaps.
+
+  Same policy as the scrub playhead: the control does not decide how it moves,
+  the input that drove it does.
+*/
+.result-row[data-instant="true"] {
+  transition: transform var(--dur-press) var(--ease-out);
+}
+
+/*
+  Reduced motion. Movement goes, meaning stays.
+
+  This was a blanket 0.01ms on every transition, which is the version of this
+  rule that looks responsible and is not. Nearly everything in the vocabulary
+  above transitions colour or opacity, and those are the transitions carrying
+  state: the tone shift that marks crossing from Caution into Danger, the bar
+  that steps back when its hour is no longer the one being read, the ring that
+  says the search field has focus. Killing them removed feedback without
+  removing a single pixel of travel, and the exceptions had grown to outnumber
+  the rule.
+
+  So the blanket now covers keyframe animations, which is where the loops and
+  the travelling live, and the few transitions that actually move something are
+  named below.
+
+  The contract for anything added later: a transition that moves an element
+  belongs in this block. A transition that only changes colour or opacity does
+  not.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /*
+    Two loops are slowed rather than stopped.
+
+    A frozen spinner on a button that reads "Locating" looks broken rather than
+    busy, and under the sm breakpoint that spinner is the only thing saying so:
+    the word beside it is hidden. Both of these turn or breathe in place, and
+    neither travels, so slowing is the honest reduction.
+  */
+  .animate-spin {
+    animation-duration: 3s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  .animate-pulse {
+    animation-duration: 4s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  /*
+    The entry cascade needs no rule here: .enter is declared inside a
+    no-preference query, so under this one the sections are simply already in
+    place rather than animating to it.
+  */
+
+  .pressable:active {
+    transform: none;
+  }
+
+  /*
+    The playhead and the rail marker still have to move — they are how the chart
+    says which hour is being read — but they arrive rather than slide.
+  */
+  .playhead,
+  .ladder-marker {
+    transition-duration: 0ms;
+  }
+
+  .clear-affordance {
+    transition-property: opacity;
+  }
+
+  .clear-affordance[data-visible="false"] {
+    transform: none;
+  }
+
+  /*
+    The results list keeps its fade, which is doing comprehension work: it says
+    the list arrived or left rather than teleporting. It loses the scale and the
+    offset it used to arrive with, on the way in as well as out.
+  */
+  .pop {
+    transition:
+      opacity 120ms ease,
+      display 120ms allow-discrete;
+  }
+
+  .pop[data-open="false"] {
+    transform: none;
+  }
+
+  @starting-style {
+    .pop[data-open="true"] {
+      transform: none;
+    }
+  }
+}

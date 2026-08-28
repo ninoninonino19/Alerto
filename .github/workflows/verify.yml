@@ -1,0 +1,56 @@
+name: verify
+
+# Everything `npm run verify` runs locally, run again on a clean checkout.
+#
+# The order is deliberate: the cheap, precise checks fail first. A type error
+# should not wait behind a four-minute build to be reported.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # A second push to the same branch cancels the first; nothing is learned from
+  # finishing a run against code that has already been replaced.
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Tests
+        # Hazard maths, band boundaries, scrub mapping, chart monotonicity, and
+        # the rail's agreement with the classifier. No network, no clock.
+        run: npm test
+
+      - name: Build
+        # Also runs scripts/check-css.mts, which fails if the palette's
+        # light-dark() pairs ever stop being lowered for the browserslist floor.
+        # That regression is silent everywhere else.
+        run: npm run build
+        env:
+          # The advice panel falls back to deterministic PAGASA guidance without
+          # a key, which is the path CI should exercise anyway.
+          GEMINI_API_KEY: ""

@@ -1,0 +1,12 @@
+# Keep the repository LF everywhere.
+#
+# Without this, a checkout on Windows converts to CRLF and `npm run format:check`
+# fails locally while passing in CI, because Prettier normalises to LF. Pinning
+# it here means the formatter, the editor and the Linux runner all agree.
+* text=auto eol=lf
+
+# Binary, never touched.
+*.ico binary
+*.woff2 binary
+*.png binary
+*.jpg binary
