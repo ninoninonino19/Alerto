@@ -42,7 +42,7 @@ and separate charts hide the interaction.
 
 The timeline is the control, not a picture. Hovering it previews an hour;
 **pressing pins that hour** so the readings above stay put without the pointer
-having to stay still, and they hold until Back to now releases them. Arrow keys
+having to stay still, and they hold until Back to live releases them. Arrow keys
 pin as well, since pressing a key is as deliberate as a click, and Escape
 releases.
 

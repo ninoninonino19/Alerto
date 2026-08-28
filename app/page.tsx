@@ -42,12 +42,11 @@ function resolvePlace(params: SearchParams): Place {
 }
 
 /**
- * The place is in the title, because the place is the whole point of the URL.
+ * The place is in the description, not the title.
  *
- * These links get shared — pasted into a group chat when the weather turns —
- * and the tab, the search result and the link preview all read from here. A
- * card that says only "Alerto" makes the reader open it to find out whether it
- * is even about their town.
+ * A search result and a shared card have no screen to read the place off, so
+ * they still need telling. A tab does — the place is the largest thing on it —
+ * so the title stays the brand and nothing else.
  */
 export async function generateMetadata({
   searchParams,
@@ -61,14 +60,7 @@ export async function generateMetadata({
     "thresholds. Not a replacement for an official warning.";
 
   return {
-    /*
-      The suffix is written out rather than left to the layout's title template.
-      A template applies to child route segments only, never to the segment that
-      defines it, and app/layout.tsx and app/page.tsx are the same segment — so
-      the template silently does nothing here. It is still correct for any route
-      added later, which is why it stays.
-    */
-    title: `${where} · Alerto`,
+    // No title here: the layout's is the whole title, on every page.
     description: summary,
 
     /*
@@ -78,7 +70,6 @@ export async function generateMetadata({
       which are the ones a link preview reads.
     */
     openGraph: {
-      title: `${where} · Alerto`,
       description: summary,
       type: "website",
       locale: "en_PH",
