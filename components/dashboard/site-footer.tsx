@@ -5,17 +5,15 @@
  * hardcoded the brand ink, which works against the sage page in light mode and
  * is exactly the page colour in dark mode, so the whole footer disappeared.
  *
- * Three facts and nothing else: this is not the official warning, the readings
- * are Open-Meteo's, the classifications are PAGASA's. What was here to explain
- * the method — the regression, the refresh interval, the licence — was all true
- * and none of it was what anybody reads a footer for. The one sentence that
- * changes what a reader does is the first one, and a shorter footer is the only
- * way to be sure it is the one they read.
+ * The wording is the project's own and is set here verbatim. It is the one
+ * statement on the page a reader might be relying on when they are least able
+ * to weigh it, so it is not something to paraphrase for rhythm.
  *
- * PAGASA is named twice on purpose: once as the source of the bands, once as
- * where authority actually lives, and it is the second that carries the link.
- * Saying this is unofficial without saying where official is would be half an
- * answer, and during a storm it is the half that matters.
+ * Two things are done to it rather than to the words. "Disclaimer." is lifted
+ * out of the muted run so the paragraph announces what it is before it is read,
+ * and PAGASA — named twice, once for the thresholds and once for where
+ * authority lives — carries its link on the second mention, the one that is
+ * actually asking the reader to go somewhere.
  */
 export function SiteFooter() {
   return (
@@ -23,12 +21,11 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6">
         <p className="display text-base text-footer-accent">Alerto</p>
 
-        <p className="mt-3 max-w-[68ch] text-sm leading-5">
-          <strong className="font-semibold text-footer-text">
-            This is not an official warning.
-          </strong>{" "}
+        <p className="mt-3 max-w-[72ch] text-sm leading-5">
+          <strong className="font-semibold text-footer-text">Disclaimer.</strong>{" "}
           <span className="text-footer-muted">
-            Readings come from{" "}
+            Alerto is an informational tool and does not issue official warnings. Weather data is
+            sourced from{" "}
             <a
               href="https://open-meteo.com"
               className="hoverable font-semibold text-footer-accent underline underline-offset-2"
@@ -36,8 +33,8 @@ export function SiteFooter() {
             >
               Open-Meteo
             </a>
-            , and the advisory classifications are PAGASA&rsquo;s. For a warning that carries
-            authority, go to{" "}
+            , and advisory classifications follow PAGASA&rsquo;s published thresholds. For official
+            warnings and guidance, refer to{" "}
             <a
               href="https://www.pagasa.dost.gov.ph"
               className="hoverable font-semibold text-footer-accent underline underline-offset-2"
@@ -45,7 +42,7 @@ export function SiteFooter() {
             >
               PAGASA
             </a>{" "}
-            or your local disaster risk reduction and management office.
+            or your local Disaster Risk Reduction and Management Office.
           </span>
         </p>
       </div>
